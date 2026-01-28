@@ -19,7 +19,7 @@ export async function runAgent(
   const conversation = query({
     prompt,
     options: {
-      allowedTools: ["WebSearch", "WebFetch"],
+      allowedTools: ["WebSearch", "WebFetch", "Read", "Write", "Edit", "Bash", "Glob", "Grep"],
       permissionMode: "bypassPermissions",
       maxTurns: 30,
       stderr: (data: string) => console.error(`[agent:stderr] ${data}`),

@@ -128,16 +128,37 @@ const HTML = /* html */ `<!DOCTYPE html>
         const content = d.message?.content;
         if (Array.isArray(content)) {
           for (const block of content) {
-            if (block.type === "text") log(block.text, "msg-assistant");
-            if (block.type === "tool_use") log("[tool] " + block.name + ": " + JSON.stringify(block.input).slice(0, 200), "msg-stream");
+            if (block.type === "text" && block.text) log(block.text, "msg-assistant");
+            if (block.type === "tool_use") log("[tool] " + block.name + "(" + JSON.stringify(block.input).slice(0, 300) + ")", "msg-stream");
+          }
+        }
+      });
+
+      es.addEventListener("user", (e) => {
+        const d = JSON.parse(e.data);
+        const content = d.message?.content;
+        if (Array.isArray(content)) {
+          for (const block of content) {
+            if (block.type === "tool_result") {
+              const text = typeof block.content === "string"
+                ? block.content
+                : Array.isArray(block.content)
+                  ? block.content.map(c => c.text || "").join("\\n")
+                  : JSON.stringify(block.content);
+              if (text) log("[tool result] " + text.slice(0, 500), "msg-stream");
+            }
           }
         }
       });
 
       es.addEventListener("result", (e) => {
         const d = JSON.parse(e.data);
-        log("\\n--- RESULT ---", "msg-result");
-        log(d.result || d.subtype, "msg-result");
+        log("\\n--- RESULT (cost: $" + (d.total_cost_usd || 0).toFixed(4) + ", turns: " + (d.num_turns || "?") + ") ---", "msg-result");
+        if (d.result) {
+          log(d.result, "msg-result");
+        } else {
+          log("[status: " + d.subtype + "]", "msg-result");
+        }
       });
 
       es.addEventListener("done", () => {

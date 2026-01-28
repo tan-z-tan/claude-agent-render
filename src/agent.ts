@@ -22,6 +22,7 @@ export async function runAgent(
       allowedTools: ["WebSearch", "WebFetch"],
       permissionMode: "bypassPermissions",
       maxTurns: 30,
+      stderr: (data: string) => console.error(`[agent:stderr] ${data}`),
       ...(resumeSessionId ? { resume: resumeSessionId } : {}),
     },
   });

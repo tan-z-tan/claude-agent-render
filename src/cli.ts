@@ -11,6 +11,7 @@ import * as readline from "readline";
 import { EventSource } from "eventsource";
 
 const AGENT_URL = process.env.AGENT_URL || "http://localhost:3000";
+const API_KEY = process.env.AGENT_API_KEY || "";
 
 // --- ANSI colors ---
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
@@ -35,7 +36,10 @@ function parseArgs(): { resume?: string } {
 // --- SSE streaming ---
 function streamTask(taskId: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const es = new EventSource(`${AGENT_URL}/api/tasks/${taskId}/stream`);
+    const url = API_KEY
+      ? `${AGENT_URL}/api/tasks/${taskId}/stream?key=${API_KEY}`
+      : `${AGENT_URL}/api/tasks/${taskId}/stream`;
+    const es = new EventSource(url);
 
     es.addEventListener("system", (e: any) => {
       const d = JSON.parse(e.data);
@@ -103,10 +107,16 @@ function streamTask(taskId: string): Promise<void> {
 }
 
 // --- API calls ---
+function authHeaders(): Record<string, string> {
+  const h: Record<string, string> = { "Content-Type": "application/json" };
+  if (API_KEY) h["Authorization"] = `Bearer ${API_KEY}`;
+  return h;
+}
+
 async function createTask(prompt: string): Promise<string> {
   const res = await fetch(`${AGENT_URL}/api/tasks`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify({ prompt }),
   });
   const data = await res.json();
@@ -117,7 +127,7 @@ async function createTask(prompt: string): Promise<string> {
 async function resumeTask(taskId: string, prompt: string): Promise<void> {
   const res = await fetch(`${AGENT_URL}/api/tasks/${taskId}/resume`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify({ prompt }),
   });
   const data = await res.json();

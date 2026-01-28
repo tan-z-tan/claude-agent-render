@@ -9,7 +9,7 @@ const app = express();
 app.use((_req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (_req.method === "OPTIONS") {
     res.status(204).end();
     return;
@@ -18,6 +18,17 @@ app.use((_req, res, next) => {
 });
 
 app.use(express.json());
+
+// --- API Key 認証 ---
+const API_KEY = process.env.API_KEY;
+app.use("/api", (req, res, next) => {
+  if (!API_KEY) return next(); // API_KEY 未設定なら認証スキップ
+  const auth = req.headers.authorization;
+  if (auth === `Bearer ${API_KEY}`) return next();
+  // SSE の EventSource は Authorization ヘッダーを送れないので query param も許可
+  if (req.query.key === API_KEY) return next();
+  res.status(401).json({ error: "unauthorized" });
+});
 
 // --- POST /api/tasks : タスク作成 & エージェント実行開始 ---
 app.post("/api/tasks", (req, res) => {

@@ -4,6 +4,19 @@ import { runAgent } from "./agent.js";
 import type { CreateTaskRequest, ResumeTaskRequest } from "./types.js";
 
 const app = express();
+
+// CORS: ローカルクライアントからのアクセスを許可
+app.use((_req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (_req.method === "OPTIONS") {
+    res.status(204).end();
+    return;
+  }
+  next();
+});
+
 app.use(express.json());
 
 // --- POST /api/tasks : タスク作成 & エージェント実行開始 ---

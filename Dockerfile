@@ -24,5 +24,9 @@ RUN npx tsc
 # ビルド後に devDependencies を削除
 RUN npm prune --omit=dev
 
+# 非 root ユーザーで実行（bypassPermissions は root 不可）
+RUN useradd -m agent
+USER agent
+
 EXPOSE 3000
 CMD ["node", "dist/server.js"]

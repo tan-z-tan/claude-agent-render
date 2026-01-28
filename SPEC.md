@@ -44,10 +44,11 @@ Render上で常時稼働し、外部からAPIでリクエストを受けてス�
 
 ```
 src/
-├── server.ts       # Express サーバー、ルーティング、SSE
+├── server.ts       # Express サーバー（Render 側）、ルーティング、SSE
 ├── agent.ts        # Claude Agent SDK のラッパー
 ├── store.ts        # インメモリのタスク/セッション管理
-└── types.ts        # 型定義
+├── types.ts        # 型定義
+└── client.ts       # ローカル確認用 Express サーバー（簡易 Web UI）
 Dockerfile          # Render デプロイ用
 ```
 
@@ -127,4 +128,4 @@ for await (const message of conversation) {
 - サーバー再起動で全セッション消失 → OK
 - 同時実行タスク数は当面制限しない（メモリ注意）
 - 認証は当面なし（後から追加可能）
-- フロントエンドは作らず、curl やローカルスクリプトで確認
+- ローカルに簡易 Express サーバー（client.ts）を立てて動作確認する

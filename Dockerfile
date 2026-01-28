@@ -1,5 +1,12 @@
 FROM node:22-slim
 
+# Claude Code CLI が必要とするシステムパッケージ
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 # Claude Code CLI をグローバルインストール
 RUN npm install -g @anthropic-ai/claude-code
 

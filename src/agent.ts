@@ -14,32 +14,41 @@ export async function runAgent(
   onMessage: MessageCallback,
   resumeSessionId?: string
 ): Promise<void> {
+  console.log(`[agent] Starting task ${taskId}, prompt: "${prompt.slice(0, 80)}"`);
+
   const conversation = query({
     prompt,
     options: {
-      allowedTools: ["WebSearch", "WebFetch", "Read", "Write", "Bash"],
+      allowedTools: ["WebSearch", "WebFetch"],
       permissionMode: "bypassPermissions",
       maxTurns: 30,
       ...(resumeSessionId ? { resume: resumeSessionId } : {}),
     },
   });
 
-  for await (const message of conversation) {
-    pushMessage(taskId, message);
-    onMessage(message);
+  try {
+    for await (const message of conversation) {
+      console.log(`[agent] message type=${message.type}`);
+      pushMessage(taskId, message);
+      onMessage(message);
 
-    // system init からセッションID を取得
-    if (message.type === "system" && message.subtype === "init") {
-      updateTask(taskId, { sessionId: message.session_id });
-    }
+      // system init からセッションID を取得
+      if (message.type === "system" && message.subtype === "init") {
+        updateTask(taskId, { sessionId: message.session_id });
+      }
 
-    // 結果メッセージで完了/エラーを記録
-    if (message.type === "result") {
-      if (message.subtype === "success") {
-        updateTask(taskId, { status: "completed", result: message.result });
-      } else {
-        updateTask(taskId, { status: "error", error: message.subtype });
+      // 結果メッセージで完了/エラーを記録
+      if (message.type === "result") {
+        if (message.subtype === "success") {
+          updateTask(taskId, { status: "completed", result: message.result });
+        } else {
+          updateTask(taskId, { status: "error", error: message.subtype });
+        }
       }
     }
+  } catch (err) {
+    console.error(`[agent] Task ${taskId} error:`, err);
+    updateTask(taskId, { status: "error", error: String(err) });
+    throw err;
   }
 }

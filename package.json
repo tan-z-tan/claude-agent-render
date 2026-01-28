@@ -7,10 +7,12 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "client": "tsx src/test-client.ts"
+    "client": "tsx src/client.ts",
+    "cli": "tsx src/cli.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.0",
+    "eventsource": "^4.1.0",
     "express": "^5.0.1",
     "uuid": "^11.1.0"
   },
